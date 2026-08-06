@@ -1,51 +1,17 @@
-# NYC Taxi Data Engineering Platform
-
-Plateforme de données construite sur AWS pour ingérer, transformer, contrôler,
-modéliser et analyser les données mensuelles des taxis de New York.
-
 ## Statut du projet
 
 Projet en cours de développement.
 
-Phase actuelle : initialisation du dépôt et préparation de l’environnement local.
+Actuellement disponible :
 
-## Objectifs
+- structure du dépôt ;
+- documentation initiale ;
+- environnement local ;
+- préparation du pipeline d’ingestion.
 
-Ce projet a pour objectif de construire un pipeline Data Engineering :
+Prochaines étapes :
 
-- automatisé ;
-- reproductible ;
-- déployé avec Terraform ;
-- contrôlé par des tests de qualité ;
-- orchestré avec Apache Airflow ;
-- documenté pour être compris et reproduit ;
-- adapté à un budget AWS personnel.
-
-## Architecture cible
-
-```text
-NYC Taxi Trip Records
-        |
-        v
-Python extraction
-        |
-        v
-Amazon S3 - Raw
-        |
-        v
-AWS Glue / PySpark
-        |
-        v
-Amazon S3 - Curated
-        |
-        v
-AWS Glue Data Catalog
-        |
-        v
-Amazon Athena
-        |
-        v
-dbt
-        |
-        v
-Power BI
+- exploration des données NYC Taxi ;
+- validation avec Great Expectations ;
+- ingestion dans Amazon S3 ;
+- transformation avec AWS Glue.
