@@ -1,0 +1,87 @@
+{
+    "file": "data\\raw\\trips\\year=2025\\month=01\\yellow_tripdata_2025-01.parquet",
+    "file_size_mb": 56.42,
+    "expected_period": {
+        "year": 2025,
+        "month": 1
+    },
+    "dataset": {
+        "row_count": 3475226,
+        "column_count": 20,
+        "duplicate_rows": 0
+    },
+    "schema": {
+        "columns": [
+            "VendorID",
+            "tpep_pickup_datetime",
+            "tpep_dropoff_datetime",
+            "passenger_count",
+            "trip_distance",
+            "RatecodeID",
+            "store_and_fwd_flag",
+            "PULocationID",
+            "DOLocationID",
+            "payment_type",
+            "fare_amount",
+            "extra",
+            "mta_tax",
+            "tip_amount",
+            "tolls_amount",
+            "improvement_surcharge",
+            "total_amount",
+            "congestion_surcharge",
+            "Airport_fee",
+            "cbd_congestion_fee"
+        ],
+        "missing_required_columns": []
+    },
+    "null_values": {
+        "passenger_count": {
+            "count": 540149,
+            "percentage": 15.54
+        },
+        "RatecodeID": {
+            "count": 540149,
+            "percentage": 15.54
+        },
+        "store_and_fwd_flag": {
+            "count": 540149,
+            "percentage": 15.54
+        },
+        "congestion_surcharge": {
+            "count": 540149,
+            "percentage": 15.54
+        },
+        "Airport_fee": {
+            "count": 540149,
+            "percentage": 15.54
+        }
+    },
+    "date_quality": {
+        "null_pickup_datetime": 0,
+        "null_dropoff_datetime": 0,
+        "dropoff_before_pickup": 124,
+        "zero_duration_trips": 1927,
+        "trips_longer_than_24_hours": 20,
+        "rows_outside_expected_month": 22,
+        "minimum_pickup_datetime": "2024-12-31T20:47:55",
+        "maximum_pickup_datetime": "2025-02-01T00:00:44"
+    },
+    "distance_quality": {
+        "negative_trip_distance": 0,
+        "zero_trip_distance": 90893,
+        "trip_distance_over_100_miles": 162,
+        "maximum_trip_distance": 276423.57
+    },
+    "amount_quality": {
+        "negative_fare_amount": 144118,
+        "negative_tip_amount": 124,
+        "negative_total_amount": 63037,
+        "total_amount_over_1000": 3,
+        "maximum_total_amount": 863380.37
+    },
+    "location_quality": {
+        "invalid_pickup_location_ids": 0,
+        "invalid_dropoff_location_ids": 0
+    }
+}
