@@ -1,0 +1,8 @@
+aws_region  = "eu-north-1"
+aws_profile = "nyc-taxi-dev"
+
+project_name = "nyc-taxi-data-platform"
+environment  = "dev"
+owner        = "Mouhamadou"
+
+force_destroy_bucket = false
