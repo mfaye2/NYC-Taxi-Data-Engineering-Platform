@@ -1,0 +1,18 @@
+nyc_taxi:
+  target: dev
+
+  outputs:
+    dev:
+      type: athena
+      database: AwsDataCatalog
+      schema: nyc_taxi_data_platform_dev
+
+      region_name: eu-north-1
+
+      work_group: nyc-taxi-data-platform-dev-analytics
+
+      s3_staging_dir: s3://your-bucket-name/athena-results/
+
+      profile_name: your-aws-profile
+
+      threads: 4

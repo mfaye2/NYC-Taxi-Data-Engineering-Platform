@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: stg_trips
+    description: "Clean staging view based on curated NYC Yellow Taxi trips."
+
+    columns:
+      - name: pickup_datetime
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        tests:
+          - not_null
+
+      - name: pickup_location_id
+        tests:
+          - not_null
+
+      - name: dropoff_location_id
+        tests:
+          - not_null
+
+  - name: trips_by_borough
+    description: "Aggregated trip metrics by pickup borough."
+
+    columns:
+      - name: pickup_borough
+        tests:
+          - not_null
+
+  - name: trips_by_hour
+    description: "Aggregated trip metrics by pickup hour."
+
+    columns:
+      - name: pickup_hour
+        tests:
+          - not_null
+
+  - name: top_pickup_zones
+    description: "Trip metrics grouped by pickup zone."

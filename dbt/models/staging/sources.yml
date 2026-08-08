@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: nyc_taxi_source
+    database: AwsDataCatalog
+    schema: nyc_taxi_data_platform_dev
+
+    tables:
+      - name: curated_trips
+      - name: rejected_trips
