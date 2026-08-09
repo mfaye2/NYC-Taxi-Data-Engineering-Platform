@@ -166,13 +166,29 @@ def upload_month_to_s3(**context):
 def start_glue_job(**context):
     glue = get_glue_client()
 
+    start_date, end_date = get_processing_dates(context)
+
+    start_date_iso = start_date.strftime("%Y-%m-%d")
+    end_date_iso = end_date.strftime("%Y-%m-%d")
+
+    print(
+        f"Période demandée : "
+        f"{start_date_iso} -> {end_date_iso}"
+    )
+
     response = glue.start_job_run(
-        JobName=GLUE_JOB_NAME
+        JobName=GLUE_JOB_NAME,
+        Arguments={
+            "--START_DATE": start_date_iso,
+            "--END_DATE": end_date_iso,
+        }
     )
 
     job_run_id = response["JobRunId"]
 
-    print(f"Glue JobRunId: {job_run_id}")
+    print(
+        f"Glue JobRunId : {job_run_id}"
+    )
 
     context["ti"].xcom_push(
         key="glue_job_run_id",
@@ -210,12 +226,17 @@ def wait_for_glue_job(**context):
             "ERROR",
             "EXPIRED"
         ]:
+            error_message = response["JobRun"].get(
+                "ErrorMessage",
+                "Aucun message d'erreur fourni par Glue"
+            )
+
             raise RuntimeError(
-                f"Glue job terminé avec l'état : {state}"
+                f"Glue job terminé avec l'état : {state}\n"
+                f"Erreur Glue : {error_message}"
             )
 
         time.sleep(30)
-
 
 # ---------------------------------------------------------
 # CRAWLERS

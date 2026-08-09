@@ -20,13 +20,19 @@ ARGS = getResolvedOptions(
         "SOURCE_ZONES_PATH",
         "CURATED_OUTPUT_PATH",
         "REJECTED_OUTPUT_PATH",
+        "START_DATE",
+        "END_DATE",
     ],
 )
-
 
 spark_context = SparkContext()
 glue_context = GlueContext(spark_context)
 spark = glue_context.spark_session
+
+spark.conf.set(
+    "spark.sql.sources.partitionOverwriteMode",
+    "dynamic"
+)
 
 job = Job(glue_context)
 job.init(ARGS["JOB_NAME"], ARGS)
@@ -202,43 +208,52 @@ enriched = (
         how="left",
     )
 )
-
-valid_period = (
-    F.to_date(
-        F.col("pickup_datetime")
-    ).between(
-        F.to_date(
-            F.lit(ARGS["START_DATE"])
-        ),
-        F.to_date(
-            F.lit(ARGS["END_DATE"])
-        )
+enriched = (
+    enriched
+    .withColumn(
+        "pickup_year",
+        F.year(F.col("pickup_datetime"))
+    )
+    .withColumn(
+        "pickup_month",
+        F.month(F.col("pickup_datetime"))
+    )
+    .withColumn(
+        "pickup_day",
+        F.dayofmonth(F.col("pickup_datetime"))
     )
 )
 
-enriched = enriched.withColumn(
-    "is_outside_expected_period",
-    ~valid_period
+# ---------------------------------------------------------
+# FILTER PROCESSING PERIOD
+# ---------------------------------------------------------
+
+processing_data = enriched.filter(
+    F.to_date(F.col("pickup_datetime")).between(
+        F.to_date(F.lit(ARGS["START_DATE"])),
+        F.to_date(F.lit(ARGS["END_DATE"]))
+    )
 )
 
-curated = enriched.filter(
-    (~F.col("is_anomalous_trip"))
-    &
-    (~F.col("is_outside_expected_period"))
+# ---------------------------------------------------------
+# CURATED / REJECTED
+# ---------------------------------------------------------
+
+curated = processing_data.filter(
+    ~F.col("is_anomalous_trip")
 )
 
-
-rejected = enriched.filter(
+rejected = processing_data.filter(
     F.col("is_anomalous_trip")
-    |
-    F.col("is_outside_expected_period")
 )
 
 (
-    curated.write.mode("overwrite")
+    curated.write
+    .mode("overwrite")
     .partitionBy(
         "pickup_year",
         "pickup_month",
+        "pickup_day"
     )
     .parquet(
         ARGS["CURATED_OUTPUT_PATH"]
@@ -246,7 +261,13 @@ rejected = enriched.filter(
 )
 
 (
-    rejected.write.mode("overwrite")
+    rejected.write
+    .mode("overwrite")
+    .partitionBy(
+        "pickup_year",
+        "pickup_month",
+        "pickup_day"
+    )
     .parquet(
         ARGS["REJECTED_OUTPUT_PATH"]
     )
