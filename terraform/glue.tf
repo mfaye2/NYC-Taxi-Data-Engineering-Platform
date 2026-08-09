@@ -34,7 +34,7 @@ resource "aws_glue_job" "transform_trips" {
   }
 
   default_arguments = {
-    "--SOURCE_TRIPS_PATH" = "s3://${aws_s3_bucket.data_lake.bucket}/raw/trips/year=2025/month=01/"
+    "--SOURCE_TRIPS_PATH" = "s3://${aws_s3_bucket.data_lake.bucket}/raw/trips/"
 
     "--SOURCE_ZONES_PATH" = "s3://${aws_s3_bucket.data_lake.bucket}/raw/zones/taxi_zone_lookup.csv"
 
