@@ -15,6 +15,8 @@ GLUE_JOB_NAME = "nyc-taxi-data-platform-dev-transform-trips"
 CURATED_CRAWLER = "nyc-taxi-data-platform-dev-curated-trips-crawler"
 REJECTED_CRAWLER = "nyc-taxi-data-platform-dev-rejected-trips-crawler"
 
+S3_BUCKET = "nyc-taxi-data-platform-dev-98713520"
+
 
 # ---------------------------------------------------------
 # AWS CLIENT
@@ -27,6 +29,60 @@ def get_glue_client():
     )
 
     return session.client("glue")
+
+
+# ---------------------------------------------------------
+# INGESTION
+# ---------------------------------------------------------
+
+def download_month(**context):
+    year = int(context["params"]["year"])
+    month = int(context["params"]["month"])
+
+    command = (
+        f"cd /opt/project && "
+        f"python src/extraction/download_trips.py "
+        f"--year {year} --month {month}"
+    )
+
+    run_command(command)
+
+
+def upload_month_to_s3(**context):
+    year = int(context["params"]["year"])
+    month = int(context["params"]["month"])
+
+    month_str = f"{month:02d}"
+
+    local_file = (
+        f"/opt/project/data/raw/trips/"
+        f"year={year}/month={month_str}/"
+        f"yellow_tripdata_{year}-{month_str}.parquet"
+    )
+
+    s3_key = (
+        f"raw/trips/"
+        f"year={year}/month={month_str}/"
+        f"yellow_tripdata_{year}-{month_str}.parquet"
+    )
+
+    session = boto3.Session(
+        profile_name=AWS_PROFILE,
+        region_name=AWS_REGION
+    )
+
+    s3 = session.client("s3")
+
+    print(f"Upload : {local_file}")
+    print(f"Vers : s3://{S3_BUCKET}/{s3_key}")
+
+    s3.upload_file(
+        local_file,
+        S3_BUCKET,
+        s3_key
+    )
+
+    print("Upload S3 terminé.")
 
 
 # ---------------------------------------------------------
@@ -194,9 +250,23 @@ with DAG(
     start_date=datetime(2026, 1, 1),
     schedule=None,
     catchup=False,
+    params={
+        "year": 2025,
+        "month": 3,
+    },
     tags=["nyc-taxi", "aws", "glue", "dbt"],
 ) as dag:
 
+    download_trips = PythonOperator(
+        task_id="download_month",
+        python_callable=download_month,
+    )
+
+    upload_trips = PythonOperator(
+        task_id="upload_month_to_s3",
+        python_callable=upload_month_to_s3,
+    )
+    
     start_glue = PythonOperator(
         task_id="start_glue_job",
         python_callable=start_glue_job,
@@ -239,7 +309,9 @@ with DAG(
 
 
     (
-        start_glue
+        download_trips
+        >> upload_trips
+        >> start_glue
         >> wait_glue
         >> curated_crawler
         >> wait_curated
