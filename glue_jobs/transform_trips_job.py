@@ -203,12 +203,35 @@ enriched = (
     )
 )
 
-curated = enriched.filter(
-    ~F.col("is_anomalous_trip")
+valid_period = (
+    F.to_date(
+        F.col("pickup_datetime")
+    ).between(
+        F.to_date(
+            F.lit(ARGS["START_DATE"])
+        ),
+        F.to_date(
+            F.lit(ARGS["END_DATE"])
+        )
+    )
 )
+
+enriched = enriched.withColumn(
+    "is_outside_expected_period",
+    ~valid_period
+)
+
+curated = enriched.filter(
+    (~F.col("is_anomalous_trip"))
+    &
+    (~F.col("is_outside_expected_period"))
+)
+
 
 rejected = enriched.filter(
     F.col("is_anomalous_trip")
+    |
+    F.col("is_outside_expected_period")
 )
 
 (

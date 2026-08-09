@@ -43,6 +43,9 @@ resource "aws_glue_job" "transform_trips" {
     "--REJECTED_OUTPUT_PATH" = "s3://${aws_s3_bucket.data_lake.bucket}/rejected/trips/"
 
     "--enable-continuous-cloudwatch-log" = "true"
+
+    "--START_DATE" = "2025-01-01"
+    "--END_DATE"   = "2025-01-31"
   }
 
   depends_on = [

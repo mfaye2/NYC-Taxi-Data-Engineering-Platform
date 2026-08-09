@@ -34,36 +34,87 @@ def get_glue_client():
 # ---------------------------------------------------------
 # INGESTION
 # ---------------------------------------------------------
+def get_processing_dates(context):
+    start_date_str = context["params"]["start_date"]
+    end_date_str = context["params"]["end_date"]
 
-def download_month(**context):
-    year = int(context["params"]["year"])
-    month = int(context["params"]["month"])
-
-    command = (
-        f"cd /opt/project && "
-        f"python src/extraction/download_trips.py "
-        f"--year {year} --month {month}"
+    start_date = datetime.strptime(
+        start_date_str,
+        "%d/%m/%Y"
     )
 
-    run_command(command)
+    end_date = datetime.strptime(
+        end_date_str,
+        "%d/%m/%Y"
+    )
+
+    if end_date < start_date:
+        raise ValueError(
+            "end_date doit être supérieure ou égale à start_date"
+        )
+
+    return start_date, end_date
+
+
+
+def get_months_between(start_date, end_date):
+    months = []
+
+    current_year = start_date.year
+    current_month = start_date.month
+
+    while (
+        current_year < end_date.year
+        or (
+            current_year == end_date.year
+            and current_month <= end_date.month
+        )
+    ):
+        months.append(
+            (current_year, current_month)
+        )
+
+        if current_month == 12:
+            current_month = 1
+            current_year += 1
+        else:
+            current_month += 1
+
+    return months
+
+
+
+def download_month(**context):
+    start_date, end_date = get_processing_dates(context)
+
+    months = get_months_between(
+        start_date,
+        end_date
+    )
+
+    for year, month in months:
+
+        print(
+            f"Téléchargement du mois : "
+            f"{month:02d}/{year}"
+        )
+
+        command = (
+            "cd /opt/project && "
+            "python src/extraction/download_trips.py "
+            f"--year {year} "
+            f"--month {month}"
+        )
+
+        run_command(command)
 
 
 def upload_month_to_s3(**context):
-    year = int(context["params"]["year"])
-    month = int(context["params"]["month"])
+    start_date, end_date = get_processing_dates(context)
 
-    month_str = f"{month:02d}"
-
-    local_file = (
-        f"/opt/project/data/raw/trips/"
-        f"year={year}/month={month_str}/"
-        f"yellow_tripdata_{year}-{month_str}.parquet"
-    )
-
-    s3_key = (
-        f"raw/trips/"
-        f"year={year}/month={month_str}/"
-        f"yellow_tripdata_{year}-{month_str}.parquet"
+    months = get_months_between(
+        start_date,
+        end_date
     )
 
     session = boto3.Session(
@@ -73,16 +124,39 @@ def upload_month_to_s3(**context):
 
     s3 = session.client("s3")
 
-    print(f"Upload : {local_file}")
-    print(f"Vers : s3://{S3_BUCKET}/{s3_key}")
+    for year, month in months:
 
-    s3.upload_file(
-        local_file,
-        S3_BUCKET,
-        s3_key
-    )
+        month_str = f"{month:02d}"
 
-    print("Upload S3 terminé.")
+        local_file = (
+            f"/opt/project/data/raw/trips/"
+            f"year={year}/"
+            f"month={month_str}/"
+            f"yellow_tripdata_{year}-{month_str}.parquet"
+        )
+
+        s3_key = (
+            f"raw/trips/"
+            f"year={year}/"
+            f"month={month_str}/"
+            f"yellow_tripdata_{year}-{month_str}.parquet"
+        )
+
+        print(
+            f"Upload : {local_file}"
+        )
+
+        print(
+            f"Vers : s3://{S3_BUCKET}/{s3_key}"
+        )
+
+        s3.upload_file(
+            local_file,
+            S3_BUCKET,
+            s3_key
+        )
+
+    print("Tous les mois ont été envoyés vers S3.")
 
 
 # ---------------------------------------------------------
@@ -251,8 +325,8 @@ with DAG(
     schedule=None,
     catchup=False,
     params={
-        "year": 2025,
-        "month": 3,
+    "start_date": "25/03/2025",
+    "end_date": "31/03/2025",
     },
     tags=["nyc-taxi", "aws", "glue", "dbt"],
 ) as dag:
