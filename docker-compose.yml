@@ -21,7 +21,11 @@ services:
 
 
   airflow-init:
-    image: apache/airflow:2.10.5-python3.11
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+
+    image: nyc-taxi-airflow:local
 
     depends_on:
       postgres:
@@ -38,6 +42,7 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+      - ${USERPROFILE}/.aws:/home/airflow/.aws:ro
 
     command: >
       bash -c "
@@ -55,7 +60,11 @@ services:
 
 
   airflow-webserver:
-    image: apache/airflow:2.10.5-python3.11
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    image: nyc-taxi-airflow:local
+    
 
     depends_on:
       postgres:
@@ -72,6 +81,7 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+      - ${USERPROFILE}/.aws:/home/airflow/.aws:ro
 
     ports:
       - "8080:8080"
@@ -82,7 +92,11 @@ services:
 
 
   airflow-scheduler:
-    image: apache/airflow:2.10.5-python3.11
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+
+    image: nyc-taxi-airflow:local
 
     depends_on:
       postgres:
@@ -99,6 +113,8 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+      - ${USERPROFILE}/.aws:/home/airflow/.aws:ro
+      - ./dbt:/opt/project/dbt
 
     command: scheduler
 

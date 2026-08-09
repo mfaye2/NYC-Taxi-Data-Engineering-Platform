@@ -15,6 +15,7 @@ Prochaines étapes :
 - ingestion dans Amazon S3 ;
 - transformation avec AWS Glue.
 
+
 ### Validation du pipeline
 
 La transformation AWS Glue a traité **3 475 226 trajets** :

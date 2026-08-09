@@ -35,15 +35,25 @@ def run_command(command: str):
         )
 
 
-def start_glue_job():
-    command = (
-        f"aws glue start-job-run "
-        f'--job-name "{GLUE_JOB_NAME}" '
-        f"--profile {AWS_PROFILE} "
-        f"--region {AWS_REGION}"
+import boto3
+
+def get_glue_client():
+    session = boto3.Session(
+        profile_name="nyc-taxi-dev",
+        region_name="eu-north-1"
     )
 
-    run_command(command)
+    return session.client("glue")
+
+
+def start_glue_job():
+    glue = get_glue_client()
+
+    response = glue.start_job_run(
+        JobName=GLUE_JOB_NAME
+    )
+
+    return response["JobRunId"]
 
 
 def run_curated_crawler():
